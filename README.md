@@ -10,6 +10,6 @@ To install this package, first install the `devtools` package in R:
     
 and then use the `install_github` function:
 
-    devtools::install_github("richarddmorey/slidifyLibraries")
+    devtools::install_github("richarddmorey/BayesSingleSub")
     
 See the included help files and vignettes for instructions on using the package.
