@@ -10,6 +10,6 @@ To install this package, first install the `devtools` package in R:
     
 and then use the `install_github` function:
 
-    install_github("richarddmorey/slidifyLibraries")
+    devtools::install_github("richarddmorey/slidifyLibraries")
     
 See the included help files and vignettes for instructions on using the package.
