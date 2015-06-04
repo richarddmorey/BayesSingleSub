@@ -1,0 +1,5 @@
+useDynLib(BayesSingleSub)
+
+export(ttest.Gibbs.AR,ttest.MCGQ.AR,trendtest.Gibbs.AR,trendtest.MC.AR, bayesMLint, bayesMLtrend)
+import(stats, coda,mvtnorm,MCMCpack, BayesFactor, mcmc)
+importFrom(R2jags, jags)

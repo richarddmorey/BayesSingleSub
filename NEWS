@@ -1,0 +1,17 @@
+ CHANGES IN BayesSingleSub VERSION 0.6.3  
+CHANGES
+  * Two functions added, bayesMLint() and bayesMLtrend(), which estimate Bayes factors and posterior distributions for 
+    interrupted time series data from a group of subjects coming from the same population 
+
+ CHANGES IN BayesSingleSub VERSION 0.6.2 
+
+CHANGES
+  * ttest.Gibbs.AR() and trendtest.Gibbs.AR() can now return one sided Bayes factors if return.onesided is set to TRUE
+  * New arguments in ttest.Gibbs.AR(): leftSided (should the one sided Bayes factor be left sided?) and return.onesided
+  * New arguments in trendtest.Gibbs.AR(): leftSidedInt, leftSidedTrend, and return.onesided
+  * All functions can now handle missing data
+  * Restricted to R 3.0.0
+
+
+
+  

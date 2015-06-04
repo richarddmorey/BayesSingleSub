@@ -1,0 +1,16 @@
+Package: BayesSingleSub
+Type: Package
+Title: Computation of Bayes factors for interrupted time-series designs
+Version: 0.6.3
+Date: 2014-04-22
+Author: Richard D. Morey, Rivka de Vries
+Maintainer: Richard D. Morey <richarddmorey@gmail.com>
+Description: The BayesSingleSub package is a suite of functions for computing various Bayes factors for interrupted time-series, based on the models described in de Vries and Morey (2013) and de Vries, Morey, and Tendeiro (in preparation).
+License: GPL-2
+VignetteBuilder: knitr
+Depends: R (>= 3.0.0)
+Suggests: knitr
+Imports: coda, mvtnorm, MCMCpack, BayesFactor, mcmc, stats, R2jags
+LazyLoad: yes
+NeedsCompilation: yes
+Packaged: 2015-05-30 11:51:27 UTC; boekebaas

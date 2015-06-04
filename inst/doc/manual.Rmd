@@ -1,0 +1,189 @@
+<!--
+%\VignetteEngine{knitr}
+%\VignetteIndexEntry{Using the BayesSingleSub package, version 0.6.2+}
+\usepackage[utf8]{inputenc}
+-->
+
+![alt text](extra/logo.png)
+
+------
+
+Using the 'BayesSingleSub' package, version 0.6.2+
+===============================
+
+Richard D. Morey and Rivka M. de Vries
+-----------------
+
+
+Stable version: [CRAN page](http://cran.r-project.org/package=BayesSingleSub) 
+
+```{r echo=FALSE,message=FALSE,results='hide'}
+options(markdown.HTML.stylesheet = 'extra/manual.css')
+library(knitr)
+options(digits=3)
+require(graphics)
+set.seed(2)
+```
+
+
+Below we show how to compute several Bayes factors for single subject data, testing mean or trend differences between two phases of the design, and how to obtain and plot the posterior distributions of model parameters. The models and Bayes factors are discussed in De Vries and Morey (2013) and De Vries, Morey and Hartogs (submitted). 
+
+First, download the R statistical environment from http://cran.r-project.org/ and install the BayesSingleSub package using the R command:
+```{r eval=FALSE}
+install.packages("BayesSingleSub") 
+```
+
+Then, load the BayesSingleSub package with the `library` function:
+```{r}
+library(BayesSingleSub)
+```
+For the purposes of this demonstration, we compute the Bayes factors for the data shown in Figure 1 of De Vries and Morey (2013). We first define the data and the number of observations in the pre- and post-treatment phases:
+```{r}
+data = c(87.5, 82.5, 53.4, 72.3, 94.2, 96.6, 57.4, 78.1, 
+         47.2, 80.7, 82.1, 73.7, 49.3, 79.3, 73.3, 57.3, 31.7, 
+         50.4, 77.8, 67, 40.5, 1.6, 38.6, 3.2, 24.1)
+
+n1 = 10
+n2 = 15
+```
+
+For convenience, we divide the data before and after the intervention into separate vectors:
+```{r}
+ypre =  data[1:n1]
+ypost = data[n1 + 1:n2]
+```
+
+
+The `ttest.Gibbs.AR` function is based on the JZS+AR model for the mean difference between two phases, taking auto-correlation into account. The function returns samples from posterior distributions of model parameters and three Bayes factors. The first Bayes factor tests the hypothesis that the standardized mean difference $latex \delta = 0$ against the hypothesis that the standardized mean difference $latex \delta \neq 0$, with the Cauchy distribution as a prior for $latex \delta$. The second Bayes factor is similar except that it tests the hypothesis that $latex \delta$ is within certain bounds against the hypothesis that $latex \delta$ is outside these bounds. This area null Bayes factor could be useful if the interest is in whether the effect size is practically relevant or not. The third Bayes factor is a one sided Bayes factor testing the hypothesis that $latex \delta = 0$ against the hypothesis that $latex \delta < 0$ or that $latex \delta > 0$. This Bayes factor is useful if the researcher has prior expectations about the direction of the intervention effect.
+
+The `trendtest.Gibbs.AR` function is based on the TAR model for the trend difference between two phases, again taking the auto-correlation into account. The function returns samples from posteriors and Bayes factors similar to the Bayes factors returned by the `ttest.Gibbs.AR` function. However, the Bayes factors returned by the `trendtest.Gibbs.AR` function regard the standardized intercept difference $latex \delta$ and the standardized trend difference $latex \beta_1$, rather than the standardized mean difference.
+
+The Bayes factors and samples from posteriors can be obtained by:
+```{r results='hide'}
+outMeanDiff = ttest.Gibbs.AR(ypre, ypost, 
+    iterations = 10000, return.chains = TRUE,
+		r.scale = 1, betaTheta = 5, 
+    areaNull=c(-.2,.2), return.onesided = TRUE, leftSided = TRUE,
+    sdMet = 0.3)
+outTrendDiff = trendtest.Gibbs.AR(ypre, ypost,
+		iterations = 10000, return.chains = TRUE,
+		r.scaleInt = 1, r.scaleSlp = 1, betaTheta = 5, 
+    intArea=c(-.2,.2), slpArea=c(-.2,.2), 
+    return.onesided = TRUE, leftSidedInt = TRUE, leftSidedSlp = TRUE,
+    sdMet = 0.3)
+```
+which will compute the Bayes factors and sample from the posteriors while setting the $latex r$ scales of the Cauchy priors to 1, and the parameter $latex b$ of the beta(1,b) priors on the auto-correlation $latex \rho$ to 5. These are the default for the `ttest.Gibbs.AR` and `trendtest.Gibbs.AR` functions. 
+
+The first and second arguments of both functions are the series of observations in Phase 1 and Phase 2, respectively. The `iterations` argument controls the number of Gibbs sampler iterations; more iterations will increase the accuracy of the estimate of the Bayes factor. The accuracy of the estimate can be checked by comparing the estimate from the Gibbs sampler with the Monte Carlo estimate, discussed below. Substantial disagreement implies that the Gibbs sampler has not yet converged and the number of iterations should be increased. Setting the `return.chains` argument to `TRUE` ensures that the MCMC chains and the area null Bayes factors are returned. 
+
+The values for $latex r$ can be changed by changing the `r.scale` argument of the `ttest.Gibbs.AR` function and by changing the `r.scaleInt` (for the intercept difference) and `r.scaleSlp` (for the trend difference) arguments of the `trendtest.Gibbs.AR` function. In both functions the value for $latex b$ can be changed by changing the `betaTheta` argument. If desired, $latex r$ and $latex b$ can be changed a few times and resulting Bayes factors can be compared. 
+
+The `areaNull` argument of the `ttest.Gibbs.AR` function and the `intArea` (for the intercept difference) and ` slpArea` (for the trend difference) arguments of the  `trendtest.Gibbs.AR` function set the bounds for the area null Bayes factors, on the standardized scale. The `return.onesided` argument of both functions determines whether the one sided Bayes factors should be returned. The `leftSided` argument of the `ttest.Gibbs.AR` function and the `leftSidedInt` (for the intercept difference) and `leftSidedSlp` (for the trend difference) arguments of the `trendtest.Gibbs.AR` function determine whether the one sided Bayes factors should be left sided or right sided. Setting the arguments to `TRUE` results in left sided tests, setting the arguments to `FALSE` results in right sided tests.
+
+Finally, the <q>acceptance rate</q> reported by the function is an index of the quality of the MCMC sampling of $latex \rho$ (the Metropolis-Hastings acceptance rate; Hastings, 1970; Ross,2002). This number should be between .25 and .5 for most efficient estimation. If needed, the acceptance rate can be increased or decreased by decreasing or increasing, respectively, the `sdMet` argument, but the default setting should suffice for almost all analyses. For more information about a function's arguments, see the R help files for the corresponding function (e.g., `help("ttest.Gibbs.AR")`).
+
+The `outMeanDiff` variable now contains all the output from the `ttest.Gibbs.AR` function and the `outTrendDiff` contains all the output from the `trendtest.Gibbs.AR` function. For convenience, we will make new variables each containing a specific type of Bayes factor. In addition, we make a new variable just containing the samples from posteriors:
+
+
+```{r}
+logbfMeanDiff = outMeanDiff$logbf
+logbfMeanDiff.area =  outMeanDiff$logbfArea
+logbfMeanDiff.onesided = outMeanDiff$logbfOnesided
+chainsMeanDiff = outMeanDiff$chains
+
+logbfTrendDiff = outTrendDiff$logbf
+logbfTrendDiff.area =  outTrendDiff$logbfArea
+logbfTrendDiff.onesided = outTrendDiff$logbfOnesided
+chainsTrendDiff = outTrendDiff$chains
+```
+
+Note that the Bayes factors are returned on the log scale and need to be exponentiated in order to convert them to the original scale:
+```{r}
+exp(logbfMeanDiff)
+exp(logbfMeanDiff.area)
+exp(logbfMeanDiff.onesided)
+
+exp(logbfTrendDiff)
+exp(logbfTrendDiff.area)
+exp(logbfTrendDiff.onesided)
+```
+An overview of the type of Bayes factors, their name in the output, and their value on the original scale for the example data, is shown in the the tables below:
+
+JZS+AR model for mean difference:
+
+ Type of BF   | Name in output        | Value on original scale
+--------------|-------------------------  |------------------------
+two sided point null   |   logbf          | .69
+two sided area null   | logbfArea  | .70
+one sided point null   | logbfOnesided    | .37
+
+TAR model for trend difference:
+
+ Type of BF   | Name in output        | Values on original scale
+--------------|-------------------------  |------------------------
+two sided point null   |   logbf          | int = 1.6, trend = 4.0, joint = 5.3
+two sided area null   | logbfArea  | int = 1.8, trend = 9.0
+one sided point null   | logbfOnesided    | int = 3.1, trend = 2.2
+
+
+Every time the functions are run, the values of the Bayes factors will be slightly different, due to the random nature of MCMC estimation. However, with sufficient iterations (typically 2,000 or greater, in this application) the estimates should be consistent across calls to the `ttest.Gibbs.AR` and `trendtest.Gibbs.AR` functions.
+
+If we wish to examine the posterior distribution for any parameter of the TAR model for trend differences, we can use the `chainsTrendDiff` variable, which contains the samples from the posterior distributions for this model. The variable `chainsTrendDiff` contains a matrix with eight columns, one for each parameter of the model. Each row represents an MCMC sample from the posterior distribution of a parameter. The parameters likely of interest to researchers, along with their names in the manuscript and column numbers, are shown in the table below:
+
+Name in R     | Name in manuscript        | Column number in chains
+--------------|-------------------------  |------------------------
+`mu0`   | $latex \mu_0$             | 1
+`sig*delta`   | $latex \sigma_z \delta$   | 2
+`beta0`   | $latex \beta_0$           | 3
+`sig*beta1`   | $latex \sigma_z \beta_1$  | 4
+`sig2`   | $latex \sigma^2_z$        | 5
+`rho`   | $latex \rho$              | 8
+
+We can draw histograms of the samples for the parameters, as shown in the figure below. These histograms are approximations to the posterior distributions: for example, we can draw a histrogram for the auto-correlation $latex \rho$ from the TAR model:
+```{r eval=FALSE}
+hist(chainsTrendDiff[, 8], main = "Posterior for autocorrelation coeff.", 
+    xlim = c(0, 1))
+```
+
+```{r echo=FALSE}
+hist(chainsTrendDiff[, 8],main="Posterior for autocorrelation coeff.", xlim=c(0,1),xlab=expression(rho))
+```
+
+It is also easy to get posterior summary statistics:
+```{r}
+summary(chainsTrendDiff[, 8])
+```
+In addition to the `ttest.Gibbs.AR` and `trendtest.Gibbs.AR` functions, the BayesSingleSub package also contains the `ttest.MCGQ.AR` and `trendtest.MC.AR` functions. We have not discussed these functions so far because they do not provide qualitatively different information from the information provided by the `ttest.Gibbs.AR` and `trendtest.Gibbs.AR` functions, and we did not want to confuse the reader by discussing several functions simultaneously. However, the `ttest.MCGQ.AR` and `trendtest.MC.AR` functions provide faster estimates of the Bayes factors than the `ttest.Gibbs.AR` and `trendtest.Gibbs.AR` functions, respectively. Their only disadvantage is that they do not return posterior distributions, area null Bayes factors, or one sided Bayes factors. This is because they estimate the Bayes factors by using Monte Carlo integration rather than Gibbs sampling. But when only the two sided point null Bayes factor estimates are required, the `ttest.MCGQ.AR` and `trendtest.MC.AR` functions can be used, rather than the slower `ttest.Gibbs.AR` and `trendtest.Gibbs.AR` functions. As before, the functions require a definition of the Phase 1 and Phase 2 data and the number of iterations:
+```{r results='hide'}
+logBAR = ttest.MCGQ.AR(ypre, ypost, 
+    iterations = 10000,  r.scale = 1,  betaTheta = 5)
+logBTRENDS = trendtest.MC.AR(ypre, ypost, 
+    iterations = 10000, r.scaleInt = 1, r.scaleSlp = 1,  betaTheta = 5)
+```
+Again, the resulting log Bayes factors can be exponentiated to obtain the Bayes factors, and the values for $latex r$ and $latex b$ can be changed by changing the `r.scale`, `r.scaleInt`, `r.scaleSlp`, and `betaTheta` arguments. For comparison with the previously computed Bayes factors, we print the new Bayes factors:
+```{r}
+logBAR
+logBTRENDS
+exp(logBAR)  
+exp(logBTRENDS)
+```
+Although they are somewhat different from the Bayes factors computed using the `ttest.Gibbs.AR` and `trendtest.Gibbs.AR` functions due to random sampling, they are similar. Increasing the number of iterations will give more precise results, which will have a greater level of agreement.
+
+
+<a id="footnotes"></a>
+Footnotes 
+---------
+
+<sup id="fn1">1. The same process holds for the JZS+AR Bayes factor, but we only show the TAR Bayes factor for brevity.<a href="#ref1" title="Jump back to footnote 1 in the text.">↩</a></sup>
+
+<a id="references"></a>
+References 
+---------
+
+De Vries, R. M. \& Morey, R. D. (2013). Bayesian hypothesis testing Single-Subject Data. Psychological Methods.
+
+De Vries, R. M.,  Morey, R. D., \& Hartogs, B. In preparation.
+
+Hastings, W. K. (1970). Monte Carlo sampling methods using Markov chains and their applications. Biometrika, 57, 97-109.
+
+Ross, S. M. (2002). Simulation (3rd edition). London: Academic Press.

@@ -1,0 +1,80 @@
+model 
+{
+
+
+ for(i in 1:N){
+
+
+  Y[(cumM[i]+1):cumM[i+1]] ~ dmnorm(mu[(cumM[i]+1):cumM[i+1]], prec[i]*invPsi[1:M[i],1:M[i],i])
+mu[(cumM[i]+1):cumM[i+1]] <- B0[i]*ones[(cumM[i]+1):cumM[i+1]] + B1[i]*t[(cumM[i]+1):cumM[i+1]] + 
+                               B2[i]*time[(cumM[i]+1):cumM[i+1]] + B3[i]*txtime[(cumM[i]+1):cumM[i+1]]
+
+
+  B0[i] ~ dnorm(0,1.0E-5)
+B1[i] ~ dnorm(mu_B1, invg2/exp(mu_sig2_e))
+B2[i] ~ dnorm(0,1.0E-5)
+  B3[i] ~ dnorm(mu_B3, invg4/exp(mu_sig2_e))
+
+
+sig2_e[i] ~ dlnorm(mu_sig2_e,prec_sig2_e)
+prec[i] <- 1/sig2_e[i]
+
+
+invPsi[1:M[i],1:M[i],i] <- ( 1 - theta^2 ) * inverse(theta^D[1:M[i],1:M[i],i])
+
+
+   post.mu_B1[i]  <- (t(Y[(cumM[i]+1):cumM[i+1]] - B0[i]*ones[(cumM[i]+1):cumM[i+1]] - 
+                      B2[i]*time[(cumM[i]+1):cumM[i+1]] - B3[i]*txtime[(cumM[i]+1):cumM[i+1]]) %*% 
+                      invPsi[1:M[i],1:M[i],i] %*% 
+                      t[(cumM[i]+1):cumM[i+1]] + (sig2_e[i]/(g2*exp(mu_sig2_e)))*mu_B1) / 
+                      (t(t[(cumM[i]+1):cumM[i+1]]) %*% invPsi[1:M[i],1:M[i],i] %*% t[(cumM[i]+1):cumM[i+1]] +
+             sig2_e[i]/(g2*exp(mu_sig2_e)))
+
+
+  post.sig2_B1[i] <- sig2_e[i] / ( t(t[(cumM[i]+1):cumM[i+1]]) %*% invPsi[1:M[i],1:M[i],i] %*% 
+                      t[(cumM[i]+1):cumM[i+1]] + sig2_e[i]/(g2*exp(mu_sig2_e)))
+
+
+
+
+  post.mu_B3[i]  <- (t(Y[(cumM[i]+1):cumM[i+1]] - B0[i]*ones[(cumM[i]+1):cumM[i+1]] - 
+                    B1[i]*t[(cumM[i]+1):cumM[i+1]] - B2[i]*time[(cumM[i]+1):cumM[i+1]]) %*%   
+                    invPsi[1:M[i],1:M[i],i] %*% txtime[(cumM[i]+1):cumM[i+1]] + 
+               (sig2_e[i]/(g4*exp(mu_sig2_e)))*mu_B3) / 
+                    ( t(txtime[(cumM[i]+1):cumM[i+1]]) %*% invPsi[1:M[i],1:M[i],i] %*% 
+                    txtime[(cumM[i]+1):cumM[i+1]] + sig2_e[i]/(g4*exp(mu_sig2_e)))
+
+
+  post.sig2_B3[i] <- sig2_e[i] / ( t(txtime[(cumM[i]+1):cumM[i+1]]) %*% invPsi[1:M[i],1:M[i],i] %*% 
+                      txtime[(cumM[i]+1):cumM[i+1]] + sig2_e[i]/(g4*exp(mu_sig2_e)))
+
+
+}
+
+
+
+
+mu_B1 ~ dnorm(0,invg1/exp(mu_sig2_e))
+mu_B3 ~ dnorm(0,invg3/exp(mu_sig2_e))
+invg1 ~ dgamma(.5,r1^2 *.5)
+invg2 ~ dgamma(.5,r2^2 *.5)
+invg3 ~ dgamma(.5,r3^2 *.5)
+invg4 ~ dgamma(.5,r4^2 *.5)
+
+
+g1 <- 1/invg1
+g2 <- 1/invg2
+g3 <- 1/invg3
+g4 <- 1/invg4
+mu_sig2_e ~ dnorm(mu_mu_sig2_e,1/sig2_mu_sig2_e)
+
+prec_sig2_e ~ dgamma(.5,.5)
+
+
+sig2_sig2_e <- 1/prec_sig2_e
+theta1 ~ dbeta(1,beta_theta)
+theta <- trunc*theta1
+
+
+
+}
