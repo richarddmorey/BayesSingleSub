@@ -159,7 +159,7 @@ void invertPsi(double theta, int N, double *distMat, double *invPsi, double thre
       Psi[j] = pow(theta,distMat[j])/l;
     }
     
-    F77_CALL(dgemm)("N", "N", &N, &N, &N, &one, Psi, &N, invPsi, &N, &zero, PsiPsim1, &N);
+    F77_CALL(dgemm)("N", "N", &N, &N, &N, &one, Psi, &N, invPsi, &N, &zero, PsiPsim1, &N FCONE FCONE);
     
     
     for(i=0;i<N;i++){
@@ -213,7 +213,7 @@ double logPhiAminusPhiB(double a, double b){
 
 double expXphiAminusphiB(double x, double a, double b, int returnlog){
   double ret;
-  switch(abs(a)>5&&abs(b)>5){
+  switch(fabs(a)>5&&fabs(b)>5){
   case 1:
     if(a>5&&b>5){
       ret=x+logPhiAminusPhiB(a,b);
@@ -455,7 +455,7 @@ double funcB0(double *Y, double B1, double *invPsi, double sig2_e, int M, double
   ones[i] = 1;
   }
 
-  F77_NAME(dsymv)("U",&M,&one,invPsi,&M,ones,&inc,&zero,v,&inc);
+  F77_NAME(dsymv)("U",&M,&one,invPsi,&M,ones,&inc,&zero,v,&inc FCONE);
 
    for(i=0;i<M;i++){
      tdevinvPsiones +=  (Y[i] - B1*t[i])*v[i];
@@ -484,7 +484,7 @@ double funcB1(double *Y, double B0, double *invPsi, double *t,  double mu_B1,
   int i=0, inc = 1;
   double v[M], zero=0, one=1, tdevinvPsit=0, tinvPsit, B1samples;
 
-  F77_NAME(dsymv)("U",&M,&one,invPsi,&M,t,&inc,&zero,v,&inc);
+  F77_NAME(dsymv)("U",&M,&one,invPsi,&M,t,&inc,&zero,v,&inc FCONE);
 
    for(i=0;i<M;i++){
      tdevinvPsit +=  (Y[i] - B0)*v[i];

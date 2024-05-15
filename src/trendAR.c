@@ -71,9 +71,9 @@ void sampleMisstrend(double *y, double B0, double B1, double B2, double B3, doub
  inverse(invSyy, Nobs);
 
 
- F77_NAME(dgemm)("n","n",&Nmiss,&Nobs,&Nobs,&alpha,Symy,&Nmiss,invSyy,&Nobs,&beta,C,&Nmiss);
- F77_NAME(dgemm)("n","n",&Nmiss,&Nmiss,&Nobs,&alpha,C,&Nmiss,Syym,&Nobs,&beta,D,&Nmiss);
- F77_NAME(dgemv)("n",&Nmiss,&Nobs,&alpha,C,&Nmiss,x,&one,&beta,v,&one);
+ F77_NAME(dgemm)("n","n",&Nmiss,&Nobs,&Nobs,&alpha,Symy,&Nmiss,invSyy,&Nobs,&beta,C,&Nmiss FCONE FCONE);
+ F77_NAME(dgemm)("n","n",&Nmiss,&Nmiss,&Nobs,&alpha,C,&Nmiss,Syym,&Nobs,&beta,D,&Nmiss FCONE FCONE);
+ F77_NAME(dgemv)("n",&Nmiss,&Nobs,&alpha,C,&Nmiss,x,&one,&beta,v,&one FCONE);
 
  // Conditional mean of missings, written to ySample
  for(j=0;j<Nmiss;j++){
@@ -204,9 +204,9 @@ void gibbsTwoSampleAR_trend(double *y, int N, double *X, int p, double rscaleInt
 
 
 		dOneOverSig2 = 1/sig2;
-		F77_NAME(dgemm)("N", "N", &N, &p, &N, &dOneOverSig2, invPsi, &N, X, &N, &dZero, tempNbyP, &N);
+		F77_NAME(dgemm)("N", "N", &N, &p, &N, &dOneOverSig2, invPsi, &N, X, &N, &dZero, tempNbyP, &N FCONE FCONE);
 
-		F77_NAME(dgemm)("T", "N", &p, &p, &N, &dOne, X, &N, tempNbyP, &N, &dZero, Sigma, &p);
+		F77_NAME(dgemm)("T", "N", &p, &p, &N, &dOne, X, &N, tempNbyP, &N, &dZero, Sigma, &p FCONE FCONE);
 
 		Sigma[1 + p] += 1/(sig2 * g1);
 		Sigma[3 + p*3] += 1/(sig2 * g2);
@@ -214,8 +214,8 @@ void gibbsTwoSampleAR_trend(double *y, int N, double *X, int p, double rscaleInt
 		InvMatrixUpper(Sigma, p);
 		internal_symmetrize(Sigma, p);
 
-		F77_NAME(dgemv)("T", &N, &p, &dOne, tempNbyP, &N, y, &iOne, &dZero, tempV, &iOne);
-		F77_NAME(dgemv)("N", &p, &p, &dOne, Sigma, &p, tempV, &iOne, &dZero, tempV2, &iOne);
+		F77_NAME(dgemv)("T", &N, &p, &dOne, tempNbyP, &N, y, &iOne, &dZero, tempV, &iOne FCONE);
+		F77_NAME(dgemv)("N", &p, &p, &dOne, Sigma, &p, tempV, &iOne, &dZero, tempV2, &iOne FCONE);
 
 		rmvGaussianC(tempV2, Sigma, p);
 		Memcpy(beta, tempV2, p);
@@ -230,11 +230,11 @@ void gibbsTwoSampleAR_trend(double *y, int N, double *X, int p, double rscaleInt
 		beta3[1] = beta[2];
 		beta3[2] = beta[1];
 		Memcpy(tempV,y,N);
-		F77_NAME(dgemv)("N", &N, &iThree, &dNegOne, X3, &N, beta3, &iOne, &dOne, tempV, &iOne);
+		F77_NAME(dgemv)("N", &N, &iThree, &dNegOne, X3, &N, beta3, &iOne, &dOne, tempV, &iOne FCONE);
 		betaVar = 0;
 		betaMean = 0;
 		betaVar = quadform(X1,invPsi,N,1,N);
-		F77_NAME(dgemv)("N", &N, &N, &dOne, invPsi, &N, X1, &iOne, &dZero, tempV2, &iOne);
+		F77_NAME(dgemv)("N", &N, &N, &dOne, invPsi, &N, X1, &iOne, &dZero, tempV2, &iOne FCONE);
 
 		for(i=0;i<N;i++)
 			betaMean += tempV2[i] * tempV[i];
@@ -264,11 +264,11 @@ void gibbsTwoSampleAR_trend(double *y, int N, double *X, int p, double rscaleInt
 		beta3[1] = beta[2];
 		beta3[2] = beta[3];
 		Memcpy(tempV,y,N);
-		F77_NAME(dgemv)("N", &N, &iThree, &dNegOne, X3, &N, beta3, &iOne, &dOne, tempV, &iOne);
+		F77_NAME(dgemv)("N", &N, &iThree, &dNegOne, X3, &N, beta3, &iOne, &dOne, tempV, &iOne FCONE);
 		betaVar = 0;
 		betaMean = 0;
 		betaVar = quadform(X1,invPsi,N,1,N);
-		F77_NAME(dgemv)("N", &N, &N, &dOne, invPsi, &N, X1, &iOne, &dZero, tempV2, &iOne);
+		F77_NAME(dgemv)("N", &N, &N, &dOne, invPsi, &N, X1, &iOne, &dZero, tempV2, &iOne FCONE);
 
 		for(i=0;i<N;i++)
 			betaMean += tempV2[i] * tempV[i];
@@ -295,15 +295,15 @@ void gibbsTwoSampleAR_trend(double *y, int N, double *X, int p, double rscaleInt
 		Memcpy(tempV,y,N);
 
 		//(y - Xg%*%betag)
-		F77_NAME(dgemv)("N", &N, &iTwo, &dNegOne, Xg, &N, betag, &iOne, &dOne, tempV, &iOne);
+		F77_NAME(dgemv)("N", &N, &iTwo, &dNegOne, Xg, &N, betag, &iOne, &dOne, tempV, &iOne FCONE);
 
 		// invPsi%*%X2
-		F77_NAME(dgemm)("N", "N", &N, &iTwo, &N, &dOne, invPsi, &N, X2, &N, &dZero, tempNby2, &N);
+		F77_NAME(dgemm)("N", "N", &N, &iTwo, &N, &dOne, invPsi, &N, X2, &N, &dZero, tempNby2, &N FCONE FCONE);
 		//t(X2)%*%invPsi%*%(y - Xg%*%betag)
-		F77_NAME(dgemv)("T", &N, &iTwo, &dOne, tempNby2, &N, tempV, &iOne, &dZero, temp2by1, &iOne);
+		F77_NAME(dgemv)("T", &N, &iTwo, &dOne, tempNby2, &N, tempV, &iOne, &dZero, temp2by1, &iOne FCONE);
 
 		// t(X2)%*%invPsi%*%X2
-		F77_NAME(dgemm)("T", "N", &iTwo, &iTwo, &N, &dOne, X2, &N, tempNby2, &N, &dZero, temp2by2, &iTwo);
+		F77_NAME(dgemm)("T", "N", &iTwo, &iTwo, &N, &dOne, X2, &N, tempNby2, &N, &dZero, temp2by2, &iTwo FCONE FCONE);
 
 		temp2by2[0] += 1/g1;
 		temp2by2[3] += 1/g2;
@@ -316,7 +316,7 @@ void gibbsTwoSampleAR_trend(double *y, int N, double *X, int p, double rscaleInt
 		dOneOverSig2 = 1/sqrt(sig2);
 
 		//Sigma%*%t(X2)%*%invPsi%*%X2
-		F77_NAME(dgemv)("N", &iTwo, &iTwo, &dOneOverSig2, temp2by2, &iTwo, temp2by1, &iOne, &dZero, temp2by1_2, &iOne);
+		F77_NAME(dgemv)("N", &iTwo, &iTwo, &dOneOverSig2, temp2by2, &iTwo, temp2by1, &iOne, &dZero, temp2by1_2, &iOne FCONE);
 
 		ldensFullRestrict = -log(2 * M_PI) - 0.5*matrixDet(temp2by2,2,2,1) - 0.5*quadform(temp2by1_2,temp2by2_2,2,1,2);
 
@@ -329,7 +329,7 @@ void gibbsTwoSampleAR_trend(double *y, int N, double *X, int p, double rscaleInt
 
 		//sig2
 		Memcpy(tempV,y,N);
-		F77_NAME(dgemv)("N", &N, &p, &dNegOne, X, &N, beta, &iOne, &dOne, tempV, &iOne);
+		F77_NAME(dgemv)("N", &N, &p, &dNegOne, X, &N, beta, &iOne, &dOne, tempV, &iOne FCONE);
 		aSig2 = 0.5*(N+2);
 		bSig2 = 0.5*(quadform(tempV,invPsi,N,1,N) + beta[1]*beta[1]/g1 + beta[3]*beta[3]/g2);
 
@@ -448,7 +448,7 @@ double thetaLogLikeAR_trend(double theta, double *beta, double *X, double sig2, 
 	double loglike=0,tempV[N],invPsi[N*N],det,dNegOne=-1,dOne=1;
 
 	Memcpy(tempV,y,N);
-	F77_NAME(dgemv)("N", &N, &p, &dNegOne, X, &N, beta, &iOne, &dOne, tempV, &iOne);
+	F77_NAME(dgemv)("N", &N, &p, &dNegOne, X, &N, beta, &iOne, &dOne, tempV, &iOne FCONE);
 
 	AZERO(invPsi,N*N);
 
@@ -621,7 +621,7 @@ internal_symmetrize(invPsi, N);
 	det1 = log(tempM1[0]*tempM1[3] - tempM1[1]*tempM1[2]);
 
 
-	F77_NAME(dgemm)("T", "N", &iTwo, &N, &N, &dOne, X0, &N, invPsi, &N, &dZero, tempM2, &iTwo);
+	F77_NAME(dgemm)("T", "N", &iTwo, &N, &N, &dOne, X0, &N, invPsi, &N, &dZero, tempM2, &iTwo FCONE FCONE);
 	quadformMatrix(tempM2,tempM1,2,N,Z1,-1,0);
 	for(i=0;i<(N*N);i++){
 		Z1[i] += invPsi[i];
@@ -635,7 +635,7 @@ internal_symmetrize(invPsi, N);
 
 	det2 = log(tempS1);
 
-	F77_NAME(dgemv)("T", &N, &N, &dOne, Z1, &N, X1, &iOne, &dZero, tempV1, &iOne);
+	F77_NAME(dgemv)("T", &N, &N, &dOne, Z1, &N, X1, &iOne, &dZero, tempV1, &iOne FCONE);
 
 	//outer product of tempV
 	for(j=0;j<N;j++){
@@ -659,7 +659,7 @@ internal_symmetrize(invPsi, N);
 
 	det2 = log(tempS1);
 
-	F77_NAME(dgemv)("T", &N, &N, &dOne, Z1, &N, X1+N, &iOne, &dZero, tempV1, &iOne);
+	F77_NAME(dgemv)("T", &N, &N, &dOne, Z1, &N, X1+N, &iOne, &dZero, tempV1, &iOne FCONE);
 
 	//outer product of tempV
 	for(j=0;j<N;j++){
@@ -688,7 +688,7 @@ internal_symmetrize(invPsi, N);
 	//det2 = matrixDet(tempM1,2,2,1);
 	det2 = log(tempM1[0]*tempM1[3] - tempM1[1]*tempM1[2]);
 
-	F77_NAME(dgemm)("T", "N", &iTwo, &N, &N, &dOne, X1, &N, Z1, &N, &dZero, tempM2, &iTwo);
+	F77_NAME(dgemm)("T", "N", &iTwo, &N, &N, &dOne, X1, &N, Z1, &N, &dZero, tempM2, &iTwo FCONE FCONE);
 	quadformMatrix(tempM2,tempM1,2,N,Z2,-1,0);
 	for(i=0;i<(N*N);i++){
 		Z2[i] += Z1[i];
@@ -778,7 +778,7 @@ SEXP MCnullMargLogLikeAR_trend(SEXP thetaR, SEXP NmissR, SEXP distMatR, SEXP yR,
 	//det1 = matrixDet(tempM1,2,2,1);
 	det1 = log(tempM1[0]*tempM1[3] - tempM1[1]*tempM1[2]);
 
-	F77_NAME(dgemm)("T", "N", &iTwo, &N, &N, &dOne, X0, &N, invPsi, &N, &dZero, tempM2, &iTwo);
+	F77_NAME(dgemm)("T", "N", &iTwo, &N, &N, &dOne, X0, &N, invPsi, &N, &dZero, tempM2, &iTwo FCONE FCONE);
 
 	quadformMatrix(tempM2,tempM1,2,N,Z1,-1,0);
 
@@ -800,8 +800,8 @@ void quadformMatrix(double *X, double *S, int N, int p, double *Ans, double coef
 
 	double tempM[N*p],dOne=1,dZero=0;
 
-	F77_NAME(dgemm)("T", "N", &p, &N, &N, &dOne, X, &N, S, &N, &dZero, tempM, &p);
-	F77_NAME(dgemm)("N", "N", &p, &p, &N, &coeff, tempM, &p, X, &N, &dZero, Ans, &p);
+	F77_NAME(dgemm)("T", "N", &p, &N, &N, &dOne, X, &N, S, &N, &dZero, tempM, &p FCONE FCONE);
+	F77_NAME(dgemm)("N", "N", &p, &p, &N, &coeff, tempM, &p, X, &N, &dZero, Ans, &p FCONE FCONE);
 
 	if(invert)
 	{

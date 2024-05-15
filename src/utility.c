@@ -156,7 +156,7 @@ double matrixDet(double *A, int N, int LDA, int doLog)
 		Memcpy(&B[i*N],&A[i*LDA],N);
 	}
 	
-	F77_CALL(dpotrf)("U", &N, B, &N, &info);
+	F77_CALL(dpotrf)("U", &N, B, &N, &info FCONE);
 	if(info){
 		Rprintf("Cholesky decomposition in matrixDet() returned nonzero info %d.\n",info);
 	}
@@ -191,8 +191,8 @@ double quadform(double *x, double *A, int N, int incx, int LDA)
 	Memcpy(&B[i*N],&A[i*LDA],N);
   }
 
-  F77_NAME(dpotrf)("U", &N, B, &N, &info);
-  F77_NAME(dtrmv)("U","N","N", &N, B, &N, y, &iOne);
+  F77_NAME(dpotrf)("U", &N, B, &N, &info FCONE);
+  F77_NAME(dtrmv)("U","N","N", &N, B, &N, y, &iOne FCONE FCONE FCONE);
   
   for(i=0;i<N;i++){
     sumSq += y[i]*y[i];
@@ -214,7 +214,7 @@ double quadform2(double *x, double *A, int N, int incx, int LDA)
   double y[N];
   int iOne=1;
   
-  F77_NAME(dgemv)("N", &N, &N, &dOne, A, &LDA, x, &incx, &dZero, y, &iOne);
+  F77_NAME(dgemv)("N", &N, &N, &dOne, A, &LDA, x, &incx, &dZero, y, &iOne FCONE);
  
   for(i=0;i<N;i++){
     sumSq += y[i]*x[i];
@@ -228,8 +228,8 @@ double quadform2(double *x, double *A, int N, int incx, int LDA)
 int InvMatrixUpper(double *A, int p)
 {
       int info1, info2;
-      F77_NAME(dpotrf)("U", &p, A, &p, &info1);
-      F77_NAME(dpotri)("U", &p, A, &p, &info2);      
+      F77_NAME(dpotrf)("U", &p, A, &p, &info1 FCONE);
+      F77_NAME(dpotri)("U", &p, A, &p, &info2 FCONE);      
       //make sure you make it symmetric later...
       return(info1);
 }
@@ -245,7 +245,7 @@ void rmvGaussianC(double *mu, double *Sigma, int p)
   psqr = p * p;
   scCp = Memcpy(Calloc(psqr,double), Sigma, psqr);
 
-  F77_NAME(dpotrf)("L", &p, scCp, &p, &info);
+  F77_NAME(dpotrf)("L", &p, scCp, &p, &info FCONE);
   if (info){
 	error("Nonzero info from dpotrf: Sigma matrix is not positive-definite");
   }
@@ -254,7 +254,7 @@ void rmvGaussianC(double *mu, double *Sigma, int p)
     {
       ans[j] = rnorm(0,1);
     }
-  F77_NAME(dtrmv)("L","N","N", &p, scCp, &p, ans, &intOne);
+  F77_NAME(dtrmv)("L","N","N", &p, scCp, &p, ans, &intOne FCONE FCONE FCONE);
   F77_NAME(daxpy)(&p, &one, ans, &intOne, mu, &intOne);
   //PutRNGstate();
   Free(scCp);

@@ -71,9 +71,9 @@ void sampleMiss(double *y, double B0, double B1, double *t, double sig2_e, doubl
  inverse(invSyy, Nobs);
  
   
- F77_NAME(dgemm)("n","n",&Nmiss,&Nobs,&Nobs,&alpha,Symy,&Nmiss,invSyy,&Nobs,&beta,C,&Nmiss);
- F77_NAME(dgemm)("n","n",&Nmiss,&Nmiss,&Nobs,&alpha,C,&Nmiss,Syym,&Nobs,&beta,D,&Nmiss);
- F77_NAME(dgemv)("n",&Nmiss,&Nobs,&alpha,C,&Nmiss,x,&one,&beta,v,&one);
+ F77_NAME(dgemm)("n","n",&Nmiss,&Nobs,&Nobs,&alpha,Symy,&Nmiss,invSyy,&Nobs,&beta,C,&Nmiss FCONE FCONE);
+ F77_NAME(dgemm)("n","n",&Nmiss,&Nmiss,&Nobs,&alpha,C,&Nmiss,Syym,&Nobs,&beta,D,&Nmiss FCONE FCONE);
+ F77_NAME(dgemv)("n",&Nmiss,&Nobs,&alpha,C,&Nmiss,x,&one,&beta,v,&one FCONE);
  
  // Conditional mean of missings, written to ySample
  for(j=0;j<Nmiss;j++){
@@ -181,16 +181,16 @@ Memcpy(invPsi0,invPsi,Nsqr);
 tOnePsiOne = quadform(ones, invPsi, N, 1, N);
 tempS = -1/tOnePsiOne;
 
-F77_NAME(dsymv)("U", &N, &dOne, invPsi, &N, ones, &iOne, &dZero, tempV, &iOne);
-F77_NAME(dsyr)("U", &N, &tempS, tempV, &iOne, invPsi0, &N);
+F77_NAME(dsymv)("U", &N, &dOne, invPsi, &N, ones, &iOne, &dZero, tempV, &iOne FCONE);
+F77_NAME(dsyr)("U", &N, &tempS, tempV, &iOne, invPsi0, &N FCONE);
 
 Memcpy(invPsi1,invPsi0,Nsqr);
 
 ttPsi0t = quadform(t, invPsi0, N, 1, N) + 1/g;
 tempS = -1/ttPsi0t;
 
-F77_NAME(dsymv)("U", &N, &dOne, invPsi0, &N, t, &iOne, &dZero, tempV, &iOne);
-F77_NAME(dsyr)("U", &N, &tempS, tempV, &iOne, invPsi1, &N);
+F77_NAME(dsymv)("U", &N, &dOne, invPsi0, &N, t, &iOne, &dZero, tempV, &iOne FCONE);
+F77_NAME(dsyr)("U", &N, &tempS, tempV, &iOne, invPsi1, &N FCONE);
 
 devs = quadform(y,invPsi1,N,1,N);
 
@@ -317,7 +317,7 @@ void gibbsTwoSampleAR(double *y, int N, double *t, double rscale, double alphaTh
     
 		//mu
 		tOnePsiOne = quadform(ones, invPsi, N, 1,N);
-		F77_NAME(dsymv)("U", &N, &dOne, invPsi, &N, ones, &iOne, &dZero, psiOne, &iOne);
+		F77_NAME(dsymv)("U", &N, &dOne, invPsi, &N, ones, &iOne, &dZero, psiOne, &iOne FCONE);
 
 		meanMu = 0;
 		varMu = sig2/tOnePsiOne;
@@ -330,7 +330,7 @@ void gibbsTwoSampleAR(double *y, int N, double *t, double rscale, double alphaTh
 
 		//delta
 		ttPsit = quadform(t, invPsi, N, 1,N);
-		F77_NAME(dsymv)("U", &N, &dOne, invPsi, &N, t, &iOne, &dZero, psit, &iOne);
+		F77_NAME(dsymv)("U", &N, &dOne, invPsi, &N, t, &iOne, &dZero, psit, &iOne FCONE);
 
 		meanDelta = 0;
 		varDelta = sig2/(ttPsit + 1/g);
